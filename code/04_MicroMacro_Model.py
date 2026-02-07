@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 from scipy.optimize import minimize
 import time
-import sys
 import os
 
 DATA_PATH = "C:/Users/liyuz/Dropbox/Replication/DemandEstimationData/"

@@ -1,0 +1,7 @@
+numba>=0.60.0
+numexpr>=2.8.0
+numpy>=2.0.0
+pandas>=2.2.0
+pyblp>=1.1.0
+scipy>=1.12.0
+torch>=2.0.0

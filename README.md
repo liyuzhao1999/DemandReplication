@@ -49,7 +49,7 @@ Note: Due to the authors' adjustment on the original data, slight discrepancies 
 
 Speed comparison between CPU-based `scipy` optimization and GPU-accelerated `PyTorch` (on RTX 4060 Ti):
 
-| Model | Implementation | Time to Convergence | Speedup |
+| Model | Implementation | Runtime | Speedup |
 | :--- | :--- | :--- | :--- |
 | Mixed Logit | Scipy (CPU) | 1h 22m | 1x |
 | Mixed Logit | PyTorch (GPU) | 16m | **~5x** |

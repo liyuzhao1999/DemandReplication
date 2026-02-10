@@ -23,6 +23,7 @@ The code is organized by model and implementation method:
 | `02_MixedLogit_Pytorch.py` | GPU-accelerated Mixed Logit. PyTorch tensors offer significant speedups. | `torch` |
 | `03_BLP_Estimation.py` | Use package to implement BLP. | `pyblp` |
 | `04_MicroMacro_Model.py` | A complex structural model linking micro (household) and macro (market share) data. Solves for mean utility ($\delta$) via contraction mapping. OOP was used. | `numba`, `torch` |
+| `04_MicroMacro_DeltaProjection.do` | Stata dofile to regress delta onto X vars and FEs to estimate linear parameters. | — |
 | `src/mixed_logit.py` | Helper functions for the likelihood function. | `numpy` |
 | `requirements.txt` | Required Packages | — | 
 | `data/` | Input datasets used for estimation and analysis (data link). | — |

@@ -203,11 +203,11 @@
 
     \textbf{The ``Red Bus / Blue Bus" Paradox}
     \begin{itemize}
-        \item Scenario 1: Drive ($50\%$) vs. Red Bus ($50\%$). Ratio = 1:1.
-        \item Scenario 2: Add a ``Blue Bus'' (identical to Red Bus).
+        \item Scenario 1: Drive (6 people) vs. Red Bus (6 people). Ratio = 1:1.
+        \item Scenario 2: Add a Blue Bus (identical to Red Bus).
         \item Logic Prediction (IIA): Ratio of Drive/Red Bus must stay 1:1.
-        \item Result: Drive ($33\%$), Red Bus ($33\%$), Blue Bus ($33\%$).
-        \item Reality: Drive ($50\%$), Red Bus ($25\%$), Blue Bus ($25\%$).
+        \item Result: Drive (4 people), Red Bus (4 people), Blue Bus (4 people).
+        \item Reality: Drive (6 people), Red Bus (3 people), Blue Bus (3 people).
     \end{itemize}
     
     \textbf{Consequence:} Plain Logit forces proportional substitution. It cannot capture that Red Bus and Blue Bus are closer substitutes!
@@ -366,7 +366,7 @@ The goal is to maximize the likelihood, but it does not have a closed form since
 \begin{frame}[label=gradient]{Deriving Gradient}
     Consider the simplest case, no simulation. Let $i$ choose product $j$. The Log-Likelihood is: \hyperlink{full}{\beamerbutton{Full derivation}}
     \[
-    LL(\beta) = \ln P_{ij} = \ln\left((\frac{\exp(x_{ij}\beta)}{\sum_{k=0}^J \exp(x_{ik}\beta)}\right) = x_{ij}\beta - \ln \left( \sum_{k=0}^J \exp(x_{ik}\beta) \right)
+    LL(\beta) = \ln P_{ij} = \ln\left(\frac{\exp(x_{ij}\beta)}{\sum_{k=0}^J \exp(x_{ik}\beta)}\right) = x_{ij}\beta - \ln \left( \sum_{k=0}^J \exp(x_{ik}\beta) \right)
     \]
 
     \vspace{0.1cm}
@@ -567,22 +567,40 @@ LL.backward()
 \end{frame}
 
 
-\begin{frame}{Implementation: Manual Derivation vs. PyTorch AutoGrad}
-    \textbf{The Task:} Estimate parameters ($\theta$) using simulated maximum likelihood.
-    \vspace{0.3cm}
+\begin{frame}{Implementation Details: Coding the Likelihood}
+    Before we compute gradients, the Forward Pass must be robust and efficient.
+    
+    \vspace{0.2cm}
+    \textbf{1. The Panel Data Logic}
+    \[ \text{Log-Likelihood} = \sum_i \ln \left( \frac{1}{R} \sum_r \underbrace{\left( \prod_t P_{ijt}(\nu_{ir}) \right)}_{\text{Product over Time}} \right) \]
+
+    \vspace{0.2cm}
+    \textbf{2. Fixed Random Draws }
     \begin{itemize}
-        \item Numpy (Manual gradient)
-        \begin{itemize}
-            \item Complex math: Must derive $\frac{\partial LL}{\partial \gamma}$ manually.
-            \item Runtime: approximately 1 hour 22 minutes on BlueHive.
-        \end{itemize}
-        \item PyTorch (AutoGrad)
-        \begin{itemize}
-            \item Zero math: Just write the utility function $U_{ijt}$.
-            \item  Runtime: approximately 16 minutes on an RTX 4060 Ti
-        \end{itemize}
+        \item Draws ($\nu$) must be generated outside the optimization loop. If draws change every iteration, the optimizer fails to converge.
     \end{itemize}
 
+    \vspace{0.2cm}
+    \textbf{3. Numerical Stability (Log-Sum-Exp)}
+    \begin{itemize}
+        \item Calculating $e^{V}$ leads to overflow if $V$ is large.  Subtract $V_{max}$ before exponentiation: $\frac{e^{V_j - V_{max}}}{\sum e^{V_k - V_{max}}}$.
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}{Why AutoGrad?}
+    \begin{itemize}
+        \item Model maintenance: If a reviewer asks, ``Is the addiction parameter $\gamma$ heterogeneous?''
+        \begin{itemize}
+            \item Manual: You must re-derive $\frac{\partial LL}{\partial \sigma_\gamma}$, update the gradient code.
+            \item AutoGrad: Change 1 line in the Utility function. \texttt{loss.backward()} handles the rest
+        \end{itemize}
+        \item High-dimensional structure: 
+        \begin{itemize}
+            \item Deriving gradients through matrix operations (Cholesky, Inverse) is a nightmare of linear algebra.
+            \item AutoGrad: Handles matrix calculus derivatives natively.
+        \end{itemize}
+    \end{itemize}
 \end{frame}
 
 
@@ -593,7 +611,7 @@ LL.backward()
     We have seen how Mixed Logit handles heterogeneity using household panel data.
     
     \vspace{0.2cm}
-    \textbf{But what if we only have Aggregate Data?}
+    \textbf{But what if we only have aggregate data?}
     \begin{itemize}
         \item Data: Market shares ($s_{jt}$), Prices ($p_{jt}$), Characteristics ($x_{jt}$).
         \item No individual choices ($y_{ijt}$) are observed.
@@ -605,7 +623,7 @@ LL.backward()
         u_{ijt} = \alpha_i p_{jt} + x_{jt}\beta_i + \underbrace{\xi_{jt}}_{\text{Unobserved Quality}} + \epsilon_{ijt}
     \]
     \begin{itemize}
-        \item $\xi_{jt}$: Characteristics observed by consumers and firms (e.g., style, prestige), but \textit{unobserved} by the econometrician.
+        \item $\xi_{jt}$: Characteristics observed by consumers and firms (e.g., style, prestige), but unobserved by the econometrician.
         \item Endogeneity: Firms set prices based on $\xi_{jt}$ (High quality $\to$ High price).
         \item Result: $Corr(p_{jt}, \xi_{jt}) > 0$, which yields biased price elasticities.
     \end{itemize}
@@ -726,14 +744,13 @@ LL.backward()
     rest of the $E\!\left(\xi_{jt} Z_{jt}\right)=0$ conditions.
     \vspace{0.2cm}
     
-    \textbf{Types of instruments:} (Assumptions?)
+    \textbf{Types of instruments:}
     \begin{itemize}
-        \item Cost shifters
-        \item Hausman IV: price of product \(j\) in other markets \(p_{j't}\)
-        \item BLP IV: characteristics of rival products \(x_{-j,t}\), and other variants:
+        \item Cost shifters: Shift supply. Assume inputs aren't correlated with quality.
+        \item Hausman IV: price of product \(j\) in other markets \(p_{j't}\): Shift prices via common costs. Assume no national demand shocks.
+        \item BLP IV: characteristics of rival products \(x_{-j,t}\), and other variants: (Shift markups via competition intensity. Assume product characteristics are predetermined in the short run.)
         \begin{itemize}
-            \item \(\sum_{j' \neq j}\left( X_{jtm} - X_{j',t,m} \right)^2\)
-            \item  \(\sum_{j' \neq j}
+            \item \(\sum_{j' \neq j}\left( X_{jtm} - X_{j',t,m} \right)^2\),   \(\sum_{j' \neq j}
         \left( X_{jtm} - X_{j',t,m} \right)
         \left( X_{jtm'} - X_{j',t,m'} \right)\)
         \end{itemize}

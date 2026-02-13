@@ -1,7 +1,7 @@
 # Demand Estimation Replication Package 
 
 ## Overview
-This repository contains replication code for several structural demand models. The goal is to demonstrate the implementation of these estimators in empirical research. I used some state-of-the-art packages, like both standard CPU-based optimization (`scipy`) and modern GPU-accelerated frameworks (`PyTorch`), as well as specialized libraries like `pyblp`. I also explored an object-oriented programming (OOP) design.
+This repository contains replication code for several structural demand models. The goal is to demonstrate the implementation of these estimators in empirical research.
 
 The package covers three main approaches:
 1.  Mixed Logit (Random Coefficient Logit): Implemented via Simulated Maximum Likelihood (SML).
@@ -27,7 +27,7 @@ The code is organized by model and implementation method:
 | `src/mixed_logit.py` | Helper functions for the likelihood function. | `numpy` |
 | `requirements.txt` | Required Packages | — | 
 | `data/` | Input datasets used for estimation and analysis (data link). | — |
-| `DemandEstimation.pdf` | Presentation slides summarizing the model, identification, and implementation details. | — |
+| `slides/main.pdf` | Presentation slides summarizing the model, identification, and implementation details. | — |
 
 
 ## Installation

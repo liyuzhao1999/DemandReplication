@@ -1,6 +1,6 @@
 \documentclass[aspectratio=169, 12pt, handout]{beamer}
 
- 
+
 \usepackage{booktabs}
 \usepackage{color}
 \usepackage{ulem}
@@ -109,56 +109,114 @@
 
 
 \section{Introduction}
-\begin{frame}{Why Demand Estimation?}
-    Structural demand estimation is the prerequisite for any structural analysis of market power and pricing strategies.
+\begin{frame}{The Big Picture: What is Demand Estimation?}
+    The Data We See:
+    \begin{itemize}
+        \item Market Shares (Sales), Prices, Product Characteristics.
+    \end{itemize}
+
+    \vspace{0.3cm}
+    The Questions We Want to Answer:
+    \begin{itemize}
+        \item Price Elasticity: If Tesla cuts prices by \$5,000, how many buyers will switch from BMW?
+        \item New Product: If Apple releases a foldable iPhone, what will its market share be?
+        \item Policy: If we tax sugary drinks, will consumers switch to diet soda or water?
+    \end{itemize}
+
+    \vspace{0.3cm}
+    \textbf{The Challenge:}
+    We need a model that links observed data to consumer choices.
+\end{frame}
+
+\begin{frame}{How to Model Consumer Choice?}
+   Traditional (Continuous):
+    \begin{itemize}
+        \item ``I buy 3.5 liters of gasoline.'' (Continuous Quantity)
+        \item Model: $\log Q = \alpha - \beta \log P + \epsilon$
+    \end{itemize}
+
+    \vspace{0.3cm}
+    Discrete Choice (Reality for many markets):
+    \begin{itemize}
+        \item ``I buy either a Toyota or a Honda.'' (Mutually Exclusive)
+        \item Consumers choose the product that gives the highest utility.
+    \end{itemize}
+
+    \vspace{0.2cm}
+    \begin{block}{The Utility Framework}
+        \[ U_{ij} = \underbrace{V_{ij}(\text{Price, Quality})}_{\text{Observed}} + \underbrace{\varepsilon_{ij}}_{\text{Unobserved Idiosyncratic Taste}} \]
+        Consumer $i$ chooses product $j$ if $U_{ij} > U_{ik}$ for all $k$.
+    \end{block}
+\end{frame}
+
+
+\begin{frame}{Why Structural Demand Estimation?}
+    Why not just run a regression: $\ln(\text{Share}) = \alpha - \beta \text{Price}$?
+
     \vspace{0.3cm}
     \begin{itemize}
-        \item Calculate precise price elasticities: addressing price endogeneity ($p$ correlated with unobserved $\xi$). It is the starting point for any other analysis.
-        \item Recover supply-side primitives: inverting the FOC allows us to recover marginal costs and markups without observing real supply-side data.
-        \item Counterfactual analysis: merger simulation, introduction of new goods, or taxes.
-        \item Basis for other topics: vertical relations, network effects, consumer search, and many others...
+        \item \textbf{The Endogeneity Problem:}
+        \begin{itemize}
+            \item High price $\neq$ Low demand. (e.g., iPhone is expensive but popular).
+            \item Reason: Unobserved quality ($\xi$) drives both price and demand. We need IVs.
+        \end{itemize}
+        
+        \item \textbf{Supply-Side Inference:}
+        \begin{itemize}
+            \item From demand estimates, we can "back out" marginal costs without seeing accounting data.
+        \end{itemize}
+        
+        \item \textbf{Counterfactuals:}
+        \begin{itemize}
+            \item Regression describes history. Structural models simulate the future (e.g., merger simulation).
+        \end{itemize}
+
+        \item \textbf{Basis for other analysis:}
+        \begin{itemize}
+            \item Vertical relations, network effects, consumer search, and many other...
+        \end{itemize}
     \end{itemize}
 \end{frame}
 
+
+
 \begin{frame}{Why Mixed Logit \& BLP?}
-    Standard Logit is insufficient due to the IIA (Independence of Irrelevant Alternatives) property.
+    Standard Logit imposes strong restrictions on consumer behavior, leading to unrealistic predictions.
     \vspace{0.3cm}
     \begin{itemize}
-        \item \textbf{The IIA Restriction:}
+        \item \textbf{The Limitation: Rigid Substitution Patterns}
         \begin{itemize}
-            \item Logit implies proportional substitution (Red Bus / Blue Bus).
-            \item Cross-price elasticities are restricted by market shares, not product similarity.
+            \item In Standard Logit, if a luxury car (e.g., BMW) raises its price, the model predicts consumers will switch to all other cars proportionally (even cheap ones like Fiat).
+            \item Reality: They should switch to other luxury cars (e.g., Mercedes).
         \end{itemize}
-        \vspace{0.2cm}
-        \item \textbf{The Random Coefficients Solution:}
+        \vspace{0.3cm}
+        \item \textbf{The Solution: Modeling Heterogeneity (Random Coefficients)}
         \begin{itemize}
-            \item Allows for flexible substitution patterns: Consumers substitute towards products with similar characteristics.
-            \item Captures Unobserved Heterogeneity: $\beta_i = \bar{\beta} + \sigma \nu_i$. Different consumers value attributes differently.
+            \item We allow consumers to have different tastes for characteristics (e.g., some love performance, some care about price).
+            \item Result: High-income consumers stick to luxury goods; Price-sensitive consumers stick to budget goods. This naturally fixes the substitution problem.
         \end{itemize}
     \end{itemize}
 \end{frame}
 
 \begin{frame}{Learning From Replication}
-    Bridging the gap between textbook theory and computational practice:
-    \vspace{0.3cm}
+    I replicated two influential papers, both of which were job market papers:
     \begin{itemize}
-        \item \textbf{Optimization:}
-        \begin{itemize}
-            \item Understanding the ``Inner Loop'' (Contraction Mapping) vs. ``Outer Loop'' (GMM/MLE).
-        \end{itemize}
-        \vspace{0.2cm}
-        \item \textbf{Computational Bottlenecks:}
-        \begin{itemize}
-            \item The burden of high-dimensional integration ($N \text{ consumers} \times T \text{ periods} \times R \text{ draws}$).
-        \end{itemize}
-        \vspace{0.2cm}
-        \item \textbf{Modern Implementation:}
-        \begin{itemize}
-            \item \textbf{Vectorization \& Broadcasting:} Eliminating loops.
-            \item \textbf{JIT Compilation (\texttt{Numba}):} If loops are necessary.
-            \item \textbf{GPU Acceleration (\texttt{PyTorch}):} Parallelizing massive integral simulations.
-        \end{itemize}
+        \item ``Inference and Impact of Category Captaincy'', Management Science (Zhu, 2024)
+        \item ``Advertising and Demand for Addictive Goods'', Marketing Science (Tuchman, 2019)
+    \end{itemize} 
+    
+    \vspace{0.2cm}
+    \textbf{Why is replication crucial?}
+    \begin{itemize}
+        \item Bridge the gap: Learn to translate abstract equations into executable code.
+        \item Build your codebase: No need to start from scratch when launching your own project.
+        \item Generate new ideas: Identifying limitations in existing code often leads to improvements and new research questions.
     \end{itemize}
+    
+    \vspace{0.2cm}
+    \begin{block}{Resource Availability}
+        Replication packages are increasingly available on top journals' websites.
+    \end{block}
 \end{frame}
 
 \section{Mixed Logit}
@@ -223,7 +281,7 @@
         \item Cons: You must pre-specify the nests. The substitution pattern is ad-hoc, not found by the data.
     \end{itemize}
 
-    \textbf{2. Multinomial Probi}
+    \textbf{2. Multinomial Probit}
     \begin{itemize}
         \item Idea: Assume $\varepsilon \sim N(0, \Sigma)$. Allows flexible covariance.
         \item Pros: Theoretically flexible.
@@ -407,7 +465,7 @@ The goal is to maximize the likelihood, but it does not have a closed form since
     \[ \beta_{new} = \beta_{old} + \alpha \cdot \nabla LL \]
 
     \vspace{0.2cm}
-    \textbf{2. Newton's Method: } Fast but expsensive to get \(H\)
+    \textbf{2. Newton's Method: } Fast but expensive to get \(H\)
     \[ \beta_{new} = \beta_{old} - \underbrace{H^{-1}}_{\text{Curvature}} \nabla LL \]
 
 
@@ -448,7 +506,7 @@ The goal is to maximize the likelihood, but it does not have a closed form since
         \item Massive parallel computation (GPU Acceleration)  (Later on this point!)
             \begin{itemize}
             \item Move data from CPU to GPU.
-            \item GPUs have housands of small cores.
+            \item GPUs have thousands of small cores.
             \item We can compute utility for all $N$ consumers and $R$ draws simultaneously.
         \end{itemize}
         \item Automatic Differentiation (AutoGrad)
@@ -697,7 +755,7 @@ LL.backward()
     \]
     \vspace{-5pt}
     \begin{itemize}
-        \item \textbf{Intuition:} If Model Share \(<\) Data Share, increase $\delta$.
+        \item \textbf{Intuition:} Take \(\theta_2\) as given. Share is increasing in \(\delta\). If Model Share \(<\) Data Share, increase $\delta$.
         \item \textbf{Convergence:} \(T(\delta)=\delta+\ln(s)-\ln(s(\delta))\) is a contraction mapping (Berry, 1994).
     \end{itemize}
 
@@ -758,7 +816,7 @@ LL.backward()
 \end{frame}
 
 
-\begin{frame}{Identificaiton}
+\begin{frame}{Identification}
     \textbf{Question:} What variations identify random coefficients? \\
     \textbf{Answer:} Substitution patterns - with random coefficients, consumers substitute more to a similar product. \\
     \vspace{0.2cm}

@@ -1052,6 +1052,31 @@ t_exp_U = torch.exp(t_U)
     \end{equation*}
 \end{frame}
 
+
+\begin{frame}{Overview: Strategies for Integrating Micro Data in Demand Estimation}
+    Aggregate data alone often struggles to identify complex heterogeneity. We fix this by adding micro data:
+
+    \begin{itemize}
+        \item Demographic Distributions
+        \begin{itemize}
+            \item Census data (e.g., Income/Age distribution in each market)
+            \item We don't see who bought what. We assume the simulated agents match the Census distribution.
+        \end{itemize}
+        \item Micro-Moments
+        \begin{itemize}
+            \item Summary statistics from surveys.
+            \item Add extra moment conditions $E[Z \cdot (y - P(\theta))] = 0$
+            \item We observe correlations: ``Large families prefer Minivans.'' We match model predictions to these average micro-patterns.
+        \end{itemize}
+        \item Direct Micro-Likelihood
+        \begin{itemize}
+            \item Individual Panel Data.
+            \item Joint Estimation: Maximize $LL_{micro} + GMM_{macro}$.
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+
 \section{Conclusion}
 \begin{frame}{Conclusion}
     \textbf{Summary of Methods:}
